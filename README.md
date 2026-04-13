@@ -1,562 +1,410 @@
-# 🎵 Music Recommender Simulation
+# 🎵 RAG-Enhanced Music Recommender
 
-## Project Summary
+## Reflection
 
-This project implements a music recommender system that suggests songs based on user preferences. The system uses a mathematical scoring approach that rewards songs for their closeness to user targets. It evaluates seven song features including genre, mood, energy, tempo, valence, danceability, and acousticness. The system calculates similarity scores using a Gaussian function for numerical features and binary matching for categorical features. It then combines these scores using weighted percentages to produce a final recommendation score. The system includes ten predefined user profiles and provides detailed explanations for each recommendation.
+For this project learners need to understand how to collaborate along with an AI coding agent to plan, implement, test and debug an expansion of a previous project. Learners will likely find it hard to decide the improvement they want to implement. They will also have difficulties debugging depending on the scale of their project. AI was very helpful for debugging. It also did a good job of picking up on its own mistakes. If a learner were to get stuck then I would encourage the learner to have a structured conversation with their AI coding agent. The AI agent was very helpful during brainstorming and asked me questions that made me think of alternate ways to implement the feature I wanted in ways I hadn't thought of.
+
+## Original Project Summary
+
+The **Music Recommender Simulation** is a mathematical scoring system that recommends songs based on user preferences across 7 features (genre, mood, energy, tempo, valence, danceability, acousticness) from a catalog of 18 songs. It uses weighted scoring and Gaussian similarity functions to rank and recommend songs based on how closely they match user-specified preferences.
 
 ---
 
-## How The System Works
+## Enhanced Project Overview
 
-Each Song in the system uses seven features: genre, mood, energy, tempo, valence, danceability, and acousticness. The UserProfile stores the user's favorite genre, favorite mood, target energy level, and acoustic preference. The Recommender computes a score for each song by comparing song features to user preferences. It uses binary matching for genre and mood, giving full points for exact matches. For numerical features, it uses a Gaussian similarity function that rewards closeness to target values. The system combines individual feature scores using weighted percentages: genre (25%), mood (15%), energy (20%), tempo (10%), valence (10%), danceability (10%), and acousticness (10%). It then sorts all songs by their final score and returns the top k recommendations.
+This project has been enhanced with a **Retrieval-Augmented Generation (RAG) AI system** that interprets natural language queries and generates appropriate playlists. The system now accepts conversational input like "I want chill lofi music for studying" and uses Google Gemma 3 27b to extract structured preferences, which are then used by the existing mathematical recommender to generate personalized playlists.
+
+---
+
+## Architecture Overview
+
+The enhanced system consists of two main layers:
+
+### 1. RAG Layer (New)
+- **Gemini Client Wrapper** ([`src/gemini_client.py`](src/gemini_client.py)): Interface to Google Gemma 3 27b API for natural language processing
+- **Knowledge Base** ([`src/knowledge_base.py`](src/knowledge_base.py)): Manages song information with natural language descriptions
+- **Preference Extractor** ([`src/preference_extractor.py`](src/preference_extractor.py)): Extracts structured preferences from natural language queries
+- **Song Retriever** ([`src/song_retriever.py`](src/song_retriever.py)): Finds relevant songs using hybrid keyword/preference matching
+- **Interactive Terminal Interface** ([`src/rag_main.py`](src/rag_main.py)): Conversational CLI with multi-turn dialogue
+- **Logging System** ([`src/logger.py`](src/logger.py)): Comprehensive logging for debugging and monitoring
+- **Error Handler** ([`src/error_handler.py`](src/error_handler.py)): Centralized error handling with user-friendly messages
+
+### 2. Existing Recommender Layer
+- **Recommender** ([`src/recommender.py`](src/recommender.py)): Mathematical scoring and recommendation logic
+- **User Profiles** ([`src/user_profiles.py`](src/user_profiles.py)): Predefined profiles for reference
+- **Song Data** ([`data/songs.csv`](data/songs.csv)): Song catalog
+
+### System Flow
+
+```mermaid
+flowchart LR
+    A[User Natural Language Query] --> B[Preference Extractor]
+    B --> C[Gemma 3 27b API]
+    C --> D[Structured Preferences]
+    D --> E[Existing Recommender]
+    E --> F[Playlist Generation]
+    F --> G[AI Explanation]
+    G --> H[Display Results]
+```
+
+For detailed architecture diagrams, see [`assets/system_architecture.md`](assets/system_architecture.md).
 
 ---
 
 ## Getting Started
 
+### Prerequisites
+
+- Python 3.8 or higher
+- Google Gemma API key (get one from https://aistudio.google.com/api-keys)
+
 ### Setup
 
-1. Create a virtual environment (optional but recommended):
+1. **Clone or download the project**
+
+2. **Create a virtual environment** (optional but recommended):
 
    ```bash
    python -m venv .venv
    source .venv/bin/activate      # Mac or Linux
    .venv\Scripts\activate         # Windows
+   ```
 
-2. Install dependencies
+3. **Install dependencies**:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Set up environment variables**:
+
+   Create a `.env` file in the project root:
+
+   ```bash
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+   Get your API key from: https://aistudio.google.com/api-keys
+
+### Running the System
+
+**Option 1: RAG-Enhanced Interactive CLI (New)**
 
 ```bash
-pip install -r requirements.txt
+python -m src.rag_main
 ```
 
-3. Run the app:
+This launches the conversational interface where you can type natural language queries.
+
+**Option 2: Original CLI**
 
 ```bash
 python -m src.main
 ```
 
+This runs the original CLI with predefined user profiles.
+
 ### Running Tests
 
-Run the starter tests with:
+Run all tests:
 
 ```bash
 pytest
 ```
 
-You can add more tests in `tests/test_recommender.py`.
+Run specific test files:
 
----
-
-## Experiments You Tried
-
-I tested the system with seven standard user profiles representing different musical tastes. The system performed well for profiles with consistent preferences like chill lofi lovers and energetic pop fans. I then tested three edge case profiles with contradictory preferences. These tests revealed that the system prioritizes categorical features over numerical ones. For example, a rock song with energy 0.91 scored highly for a profile requesting energy 0.15 because it matched the rock genre and intense mood. I also experimented with different sigma values for the Gaussian function to adjust strictness. Smaller sigma values made the system more selective, while larger values made it more forgiving.
-
----
-
-## Limitations and Risks
-
-The system only works on a small catalog of 18 songs. It does not understand lyrics, language, or cultural context. The system over-prioritizes categorical features, allowing songs to achieve high scores even when numerical preferences contradict the user's targets. It can be tricked by profiles with impossible combinations like high-energy acoustic music. The system lacks representation for many genres and cultural styles. It treats each feature independently without validating whether preference combinations make realistic sense. The Gaussian similarity function is relatively forgiving, reducing sensitivity to contradictory user preferences.
-
----
-
-## Reflection
-
-Read and complete `model_card.md`:
-
-[**Model Card**](model_card.md)
-
-I learned that recommenders turn complex user preferences into simple numerical scores through mathematical functions. The system converts categorical and numerical features into comparable scores, then combines them using weighted percentages. This process reveals how bias can emerge when certain features receive disproportionate weight. In this system, categorical features dominate scoring, allowing songs to achieve high recommendations even when numerical preferences contradict user targets. This bias could unfairly favor users whose preferences align with popular genres or moods while penalizing those with unusual or contradictory tastes. The system shows how recommenders can produce unexpected results when facing inputs that don't align with typical patterns in the training data.
-
-
----
-
-## 7. `model_card_template.md`
-
-Combines reflection and model card framing from the Module 3 guidance. :contentReference[oaicite:2]{index=2}  
-
-```markdown
-# 🎧 Model Card - Music Recommender Simulation
-
-## 1. Model Name
-
-Give your recommender a name, for example:
-
-> VibeFinder 1.0
-
----
-
-## 2. Intended Use
-
-- What is this system trying to do
-- Who is it for
-
-Example:
-
-> This model suggests 3 to 5 songs from a small catalog based on a user's preferred genre, mood, and energy level. It is for classroom exploration only, not for real users.
-
----
-
-## 3. How It Works (Short Explanation)
-
-Describe your scoring logic in plain language.
-
-- What features of each song does it consider
-- What information about the user does it use
-- How does it turn those into a number
-
-Try to avoid code in this section, treat it like an explanation to a non programmer.
-
----
-
-## 4. Data
-
-Describe your dataset.
-
-- How many songs are in `data/songs.csv`
-- Did you add or remove any songs
-- What kinds of genres or moods are represented
-- Whose taste does this data mostly reflect
-
----
-
-## 5. Strengths
-
-Where does your recommender work well
-
-You can think about:
-- Situations where the top results "felt right"
-- Particular user profiles it served well
-- Simplicity or transparency benefits
-
----
-
-## 6. Limitations and Bias
-
-Where does your recommender struggle
-
-Some prompts:
-- Does it ignore some genres or moods
-- Does it treat all users as if they have the same taste shape
-- Is it biased toward high energy or one genre by default
-- How could this be unfair if used in a real product
-
----
-
-## 7. Evaluation
-
-How did you check your system
-
-Examples:
-- You tried multiple user profiles and wrote down whether the results matched your expectations
-- You compared your simulation to what a real app like Spotify or YouTube tends to recommend
-- You wrote tests for your scoring logic
-
-You do not need a numeric metric, but if you used one, explain what it measures.
-
----
-
-## 8. Future Work
-
-If you had more time, how would you improve this recommender
-
-Examples:
-
-- Add support for multiple users and "group vibe" recommendations
-- Balance diversity of songs instead of always picking the closest match
-- Use more features, like tempo ranges or lyric themes
-
----
-
-## 9. Personal Reflection
-
-A few sentences about what you learned:
-
-- What surprised you about how your system behaved
-- How did building this change how you think about real music recommenders
-- Where do you think human judgment still matters, even if the model seems "smart"
-
-```
-
-## Terminal Output
-
-### main.py
 ```bash
-Loaded 18 songs from data/songs.csv
-Using profile: chill_lofi_lover
-  Favorite Genre: lofi
-  Favorite Mood: chill
-  Target Energy: 0.4
-  Likes Acoustic: True
-
-
-Top recommendations:
-
-Library Rain - Score: 0.98
-Because: Recommended because:
-- Genre matches your preference (lofi)
-- Mood matches your preference (chill)
-- Energy is very close to your target (0.35 vs 0.4)
-- High acousticness fits your preference (0.86)
-
-Final score: 0.979 / 1.0
-
-Midnight Coding - Score: 0.96
-Because: Recommended because:
-- Genre matches your preference (lofi)
-- Mood matches your preference (chill)
-- Energy is very close to your target (0.42 vs 0.4)
-- High acousticness fits your preference (0.71)
-
-Final score: 0.957 / 1.0
-
-Focus Flow - Score: 0.83
-Because: Recommended because:
-- Genre matches your preference (lofi)
-- Energy is very close to your target (0.40 vs 0.4)
-- High acousticness fits your preference (0.78)
-
-Final score: 0.833 / 1.0
-
-Spacewalk Thoughts - Score: 0.59
-Because: Recommended because:
-- Mood matches your preference (chill)
-- Energy is reasonably close to your target (0.28 vs 0.4)
-- High acousticness fits your preference (0.92)
-
-Final score: 0.595 / 1.0
-
-Coffee Shop Stories - Score: 0.55
-Because: Recommended because:
-- Energy is very close to your target (0.37 vs 0.4)
-- High acousticness fits your preference (0.89)
-
-Final score: 0.553 / 1.0
+pytest tests/test_knowledge_base.py -v
+pytest tests/test_error_handler.py -v
+pytest tests/test_rag_integration.py -v
+pytest tests/test_recommender.py -v
 ```
 
-### test_edge_cases.py
+---
+
+## Sample Interactions
+
+### Example 1: Simple Genre/Mood Query
+
+```
+Your query (or 'quit' to exit): > I want chill lofi music for studying
+
+🎵 Understanding your request...
+
+📋 Extracted Preferences:
+   • Genre: lofi
+   • Mood: chill
+   • Energy: 0.40
+   • Likes acoustic: yes
+
+   Confidence: 80%
+
+============================================================
+🎧 Recommended Playlist
+============================================================
+
+1. Library Rain - Paper Lanterns
+   Genre: lofi | Mood: chill
+   Energy: 0.35 | Tempo: 72 BPM
+   ⭐ Score: 0.979
+   Why: Recommended because:
+   - Genre matches your preference (lofi)
+   - Mood matches your preference (chill)
+   - Energy is very close to your target (0.35 vs 0.4)
+   - High acousticness fits your preference (0.86)
+
+2. Midnight Coding - LoRoom
+   Genre: lofi | Mood: chill
+   Energy: 0.42 | Tempo: 78 BPM
+   ⭐ Score: 0.957
+   Why: Recommended because:
+   - Genre matches your preference (lofi)
+   - Mood matches your preference (chill)
+   - Energy is very close to your target (0.42 vs 0.4)
+   - High acousticness fits your preference (0.71)
+
+============================================================
+💬 AI Explanation
+============================================================
+
+Based on your request for chill lofi music for studying, I found songs that match the lofi genre and chill mood perfectly. These tracks have low energy levels and high acousticness, which creates an ideal background for focused work. The selections are from artists known for producing study-friendly lofi music.
+```
+
+### Example 2: Activity-Based Query
+
+```
+Your query (or 'quit' to exit): > Give me energetic pop songs for a workout
+
+🎵 Understanding your request...
+
+📋 Extracted Preferences:
+   • Genre: pop
+   • Mood: happy
+   • Energy: 0.85
+   • Likes acoustic: no
+
+   Confidence: 75%
+
+============================================================
+🎧 Recommended Playlist
+============================================================
+
+1. Gym Hero - Max Pulse
+   Genre: pop | Mood: intense
+   Energy: 0.93 | Tempo: 132 BPM
+   ⭐ Score: 0.717
+   Why: Recommended because:
+   - Genre matches your preference (pop)
+   - Energy is very close to your target (0.93 vs 0.85)
+
+2. Sunrise City - Neon Echo
+   Genre: pop | Mood: happy
+   Energy: 0.82 | Tempo: 118 BPM
+   ⭐ Score: 0.833
+   Why: Recommended because:
+   - Genre matches your preference (pop)
+   - Mood matches your preference (happy)
+   - Energy is reasonably close to your target (0.82 vs 0.85)
+
+============================================================
+💬 AI Explanation
+============================================================
+
+I've selected high-energy pop songs that are ideal for workouts. These tracks feature strong beats, positive moods, and high danceability to keep you motivated. The selections range from intense to happy moods, giving you variety while maintaining the energetic vibe you need for exercise.
+```
+
+### Example 3: Ambiguous Query Requiring Clarification
+
+```
+Your query (or 'quit' to exit): > I want something good
+
+⚠️  I need more information to help you find the perfect playlist. Could you tell me more about:
+
+- What mood are you looking for? (chill, happy, intense, relaxed, etc.)
+- What genre do you prefer? (pop, lofi, rock, jazz, etc.)
+- What activity will you be doing? (studying, working out, relaxing, etc.)
+- Whether you prefer acoustic or electronic music
+
+💡 Type 'options' to see available genres and moods.
+```
+
+---
+
+## Design Decisions
+
+### 1. Integration Approach
+**Decision:** RAG extracts preferences → Existing recommender generates playlist
+
+**Rationale:**
+- Leverages well-tested existing system
+- Maintains consistency with original project
+- Focuses RAG on natural language understanding
+- Avoids reinventing recommendation logic
+
+**Trade-off:** Less flexibility in recommendation algorithm
+
+### 2. Retrieval Strategy
+**Decision:** Hybrid approach (keyword + preference-based)
+
+**Rationale:**
+- Keyword matching is fast and reliable
+- Preference-based leverages existing scoring
+- Avoids complexity of vector embeddings
+- Good performance for small catalog
+
+**Trade-off:** Less sophisticated than full semantic search
+
+### 3. User Interface
+**Decision:** Interactive terminal CLI with conversation loop
+
+**Rationale:**
+- Simpler to implement
+- No additional dependencies
+- Consistent with original project
+- Easier to test and debug
+
+**Trade-off:** Less accessible to non-technical users
+
+### 4. AI Model Choice
+**Decision:** Google Gemma 3 27b (gemma-3-27b-it)
+
+**Rationale:**
+- Excellent reasoning capabilities
+- Cost-efficient compared to larger models
+- Good performance for preference extraction
+- Provided example code
+
+**Trade-off:** API dependency and cost
+
+### 5. Confidence & Reliability
+**Decision:** Multi-layered approach with confidence scoring, logging, and error handling
+
+**Rationale:**
+- Ensures system reliability
+- Aids debugging
+- Provides transparency to users
+- Handles edge cases gracefully
+
+**Trade-off:** Increased complexity
+
+---
+
+## Reliability and Evaluation
+
+### Confidence Scoring
+
+The system calculates confidence scores for preference extraction:
+
+- **Genre match:** +30%
+- **Mood match:** +30%
+- **Numerical preferences:** +10% each (up to 3)
+- **Acoustic preference:** +10%
+- **Query specificity:** +10% for longer queries
+
+This helps users understand how reliable the extracted preferences are.
+
+### Logging
+
+The system maintains comprehensive logs in the `logs/` directory:
+
+- **rag_system.log**: General system operations
+- **api_calls.log**: API interactions with Gemma
+- **errors.log**: Error and exception details
+
+All user queries, preference extractions, API calls, and errors are logged for debugging and monitoring.
+
+### Error Handling
+
+The system includes centralized error handling with:
+
+- **API errors**: Graceful degradation with user-friendly messages
+- **Extraction errors**: Request clarification from user
+- **Validation errors**: Explain what went wrong and how to fix
+- **Retrieval errors**: Suggest different criteria
+- **Configuration errors**: Clear setup instructions
+
+### Testing
+
+**Unit Tests:**
+- [`tests/test_knowledge_base.py`](tests/test_knowledge_base.py): Tests for knowledge base functionality
+- [`tests/test_error_handler.py`](tests/test_error_handler.py): Tests for error handling and validation
+- [`tests/test_recommender.py`](tests/test_recommender.py): Tests for existing recommender
+
+**Integration Tests:**
+- [`tests/test_rag_integration.py`](tests/test_rag_integration.py): End-to-end workflow tests
+
+Run tests with:
 ```bash
-Loaded 18 songs from data/songs.csv
-================================================================================
-EDGE CASE TEST: PARADOXICAL_HIGH_ENERGY_ACOUSTIC
-================================================================================
-
-📊 Profile Configuration:
-   Favorite Genre: pop
-   Favorite Mood: happy
-   Target Energy: 0.95
-   Likes Acoustic: True
-   Target Tempo: 130 BPM
-   Target Valence: 0.85
-   Target Danceability: 0.85
-   Target Acousticness: 0.9
-
-⚠️  Potential Contradictions:
-   • HIGH ENERGY (0.95) but WANTS ACOUSTIC (0.90)
-   • Acoustic music typically has LOW energy
-   • This profile wants impossible combination
-
-🎵 Top 5 Recommendations:
---------------------------------------------------------------------------------
-
-1. Sunrise City by Neon Echo
-   Genre: pop, Mood: happy
-   Energy: 0.82, Tempo: 118 BPM
-   Valence: 0.84, Danceability: 0.79
-   Acousticness: 0.18
-   ⭐ Score: 0.8333
-   Match Analysis:
-      Genre: ✓, Mood: ✓
-      Energy diff: 0.13, Tempo diff: 12 BPM
-      ⚠️  High energy but LOW acoustic (contradicts preference)
-   Recommended because:
-- Genre matches your preference (pop)
-- Mood matches your preference (happy)
-- Energy is reasonably close to your target (0.82 vs 0.95)
-
-Final score: 0.833 / 1.0
-
-2. Gym Hero by Max Pulse
-   Genre: pop, Mood: intense
-   Energy: 0.93, Tempo: 132 BPM
-   Valence: 0.77, Danceability: 0.88
-   Acousticness: 0.05
-   ⭐ Score: 0.7165
-   Match Analysis:
-      Genre: ✓, Mood: ✗
-      Energy diff: 0.02, Tempo diff: 2 BPM
-      ⚠️  High energy but LOW acoustic (contradicts preference)
-   Recommended because:
-- Genre matches your preference (pop)
-- Energy is very close to your target (0.93 vs 0.95)
-
-Final score: 0.717 / 1.0
-
-3. Rooftop Lights by Indigo Parade
-   Genre: indie pop, Mood: happy
-   Energy: 0.76, Tempo: 124 BPM
-   Valence: 0.81, Danceability: 0.82
-   Acousticness: 0.35
-   ⭐ Score: 0.5389
-   Match Analysis:
-      Genre: ✗, Mood: ✓
-      Energy diff: 0.19, Tempo diff: 6 BPM
-   Recommended because:
-- Mood matches your preference (happy)
-- Energy is reasonably close to your target (0.76 vs 0.95)
-
-Final score: 0.539 / 1.0
-
-4. Electric Pulse by Cyber Beat
-   Genre: electronic, Mood: energetic
-   Energy: 0.89, Tempo: 128 BPM
-   Valence: 0.86, Danceability: 0.91
-   Acousticness: 0.12
-   ⭐ Score: 0.4457
-   Match Analysis:
-      Genre: ✗, Mood: ✗
-      Energy diff: 0.06, Tempo diff: 2 BPM
-      ⚠️  High energy but LOW acoustic (contradicts preference)
-   Recommended because:
-- Energy is very close to your target (0.89 vs 0.95)
-
-Final score: 0.446 / 1.0
-
-5. Storm Runner by Voltline
-   Genre: rock, Mood: intense
-   Energy: 0.91, Tempo: 152 BPM
-   Valence: 0.48, Danceability: 0.66
-   Acousticness: 0.10
-   ⭐ Score: 0.2958
-   Match Analysis:
-      Genre: ✗, Mood: ✗
-      Energy diff: 0.04, Tempo diff: 22 BPM
-      ⚠️  High energy but LOW acoustic (contradicts preference)
-   Recommended because:
-- Energy is very close to your target (0.91 vs 0.95)
-
-Final score: 0.296 / 1.0
-
-📈 Score Distribution Analysis:
-   Average score across all songs: 0.3066
-   Maximum score: 0.8333
-   Minimum score: 0.1516
-   Score range: 0.6817
-
-
-================================================================================
-EDGE CASE TEST: IMPOSSIBLE_SLOW_METAL
-================================================================================
-
-📊 Profile Configuration:
-   Favorite Genre: rock
-   Favorite Mood: intense
-   Target Energy: 0.15
-   Likes Acoustic: False
-   Target Tempo: 50 BPM
-   Target Valence: 0.2
-   Target Danceability: 0.2
-   Target Acousticness: 0.1
-
-⚠️  Potential Contradictions:
-   • ROCK/INTENSE genre but LOW ENERGY (0.15)
-   • SLOW TEMPO (50 BPM) for intense rock
-   • Rock/intense music typically has HIGH energy and FAST tempo
-
-🎵 Top 5 Recommendations:
---------------------------------------------------------------------------------
-
-1. Storm Runner by Voltline
-   Genre: rock, Mood: intense
-   Energy: 0.91, Tempo: 152 BPM
-   Valence: 0.48, Danceability: 0.66
-   Acousticness: 0.10
-   ⭐ Score: 0.7791
-   Match Analysis:
-      Genre: ✓, Mood: ✓
-      Energy diff: 0.76, Tempo diff: 102 BPM
-   Recommended because:
-- Genre matches your preference (rock)
-- Mood matches your preference (intense)
-- Low acousticness fits your preference (0.10)
-
-Final score: 0.779 / 1.0
-
-2. Gym Hero by Max Pulse
-   Genre: pop, Mood: intense
-   Energy: 0.93, Tempo: 132 BPM
-   Valence: 0.77, Danceability: 0.88
-   Acousticness: 0.05
-   ⭐ Score: 0.4077
-   Match Analysis:
-      Genre: ✗, Mood: ✓
-      Energy diff: 0.78, Tempo diff: 82 BPM
-   Recommended because:
-- Mood matches your preference (intense)
-- Low acousticness fits your preference (0.05)
-
-Final score: 0.408 / 1.0
-
-3. Night Drive Loop by Neon Echo
-   Genre: synthwave, Mood: moody
-   Energy: 0.75, Tempo: 110 BPM
-   Valence: 0.49, Danceability: 0.73
-   Acousticness: 0.22
-   ⭐ Score: 0.3139
-   Match Analysis:
-      Genre: ✗, Mood: ✗
-      Energy diff: 0.60, Tempo diff: 60 BPM
-   Recommended because:
-- Low acousticness fits your preference (0.22)
-
-Final score: 0.314 / 1.0
-
-4. Heavy Thunder by Dark Forge
-   Genre: metal, Mood: angry
-   Energy: 0.95, Tempo: 145 BPM
-   Valence: 0.25, Danceability: 0.58
-   Acousticness: 0.08
-   ⭐ Score: 0.2940
-   Match Analysis:
-      Genre: ✗, Mood: ✗
-      Energy diff: 0.80, Tempo diff: 95 BPM
-   Recommended because:
-- Low acousticness fits your preference (0.08)
-
-Final score: 0.294 / 1.0
-
-5. Sunrise City by Neon Echo
-   Genre: pop, Mood: happy
-   Energy: 0.82, Tempo: 118 BPM
-   Valence: 0.84, Danceability: 0.79
-   Acousticness: 0.18
-   ⭐ Score: 0.2381
-   Match Analysis:
-      Genre: ✗, Mood: ✗
-      Energy diff: 0.67, Tempo diff: 68 BPM
-   Recommended because:
-- Low acousticness fits your preference (0.18)
-
-Final score: 0.238 / 1.0
-
-📈 Score Distribution Analysis:
-   Average score across all songs: 0.2442
-   Maximum score: 0.7791
-   Minimum score: 0.0770
-   Score range: 0.7022
-
-
-================================================================================
-EDGE CASE TEST: HYPER_FAST_AMBIENT
-================================================================================
-
-📊 Profile Configuration:
-   Favorite Genre: ambient
-   Favorite Mood: chill
-   Target Energy: 0.8
-   Likes Acoustic: True
-   Target Tempo: 180 BPM
-   Target Valence: 0.7
-   Target Danceability: 0.75
-   Target Acousticness: 0.85
-
-⚠️  Potential Contradictions:
-   • AMBIENT/CHILL genre but HIGH ENERGY (0.80)
-   • VERY FAST TEMPO (180 BPM) for ambient music
-   • Ambient/chill music typically has LOW energy and SLOW tempo
-
-🎵 Top 5 Recommendations:
---------------------------------------------------------------------------------
-
-1. Spacewalk Thoughts by Orbit Bloom
-   Genre: ambient, Mood: chill
-   Energy: 0.28, Tempo: 60 BPM
-   Valence: 0.65, Danceability: 0.41
-   Acousticness: 0.92
-   ⭐ Score: 0.7998
-   Match Analysis:
-      Genre: ✓, Mood: ✓
-      Energy diff: 0.52, Tempo diff: 120 BPM
-   Recommended because:
-- Genre matches your preference (ambient)
-- Mood matches your preference (chill)
-- High acousticness fits your preference (0.92)
-
-Final score: 0.800 / 1.0
-
-2. Library Rain by Paper Lanterns
-   Genre: lofi, Mood: chill
-   Energy: 0.35, Tempo: 72 BPM
-   Valence: 0.60, Danceability: 0.58
-   Acousticness: 0.86
-   ⭐ Score: 0.4770
-   Match Analysis:
-      Genre: ✗, Mood: ✓
-      Energy diff: 0.45, Tempo diff: 108 BPM
-   Recommended because:
-- Mood matches your preference (chill)
-- High acousticness fits your preference (0.86)
-
-Final score: 0.477 / 1.0
-
-3. Symphony No. 5 by Orchestra One
-   Genre: classical, Mood: dramatic
-   Energy: 0.72, Tempo: 68 BPM
-   Valence: 0.38, Danceability: 0.32
-   Acousticness: 0.94
-   ⭐ Score: 0.4703
-   Match Analysis:
-      Genre: ✗, Mood: ✗
-      Energy diff: 0.08, Tempo diff: 112 BPM
-   Recommended because:
-- Energy is very close to your target (0.72 vs 0.8)
-- High acousticness fits your preference (0.94)
-
-Final score: 0.470 / 1.0
-
-4. Midnight Coding by LoRoom
-   Genre: lofi, Mood: chill
-   Energy: 0.42, Tempo: 78 BPM
-   Valence: 0.56, Danceability: 0.62
-   Acousticness: 0.71
-   ⭐ Score: 0.4061
-   Match Analysis:
-      Genre: ✗, Mood: ✓
-      Energy diff: 0.38, Tempo diff: 102 BPM
-   Recommended because:
-- Mood matches your preference (chill)
-- High acousticness fits your preference (0.71)
-
-Final score: 0.406 / 1.0
-
-5. Mountain Trail by Whispering Pines
-   Genre: folk, Mood: peaceful
-   Energy: 0.32, Tempo: 72 BPM
-   Valence: 0.78, Danceability: 0.45
-   Acousticness: 0.88
-   ⭐ Score: 0.3475
-   Match Analysis:
-      Genre: ✗, Mood: ✗
-      Energy diff: 0.48, Tempo diff: 108 BPM
-   Recommended because:
-- High acousticness fits your preference (0.88)
-
-Final score: 0.348 / 1.0
-
-📈 Score Distribution Analysis:
-   Average score across all songs: 0.3114
-   Maximum score: 0.7998
-   Minimum score: 0.1729
-   Score range: 0.6269
-
-
-================================================================================
-EDGE CASE TESTING COMPLETE
-================================================================================
-
-🔍 Key Observations:
-   • Check if the recommender found any songs matching impossible criteria
-   • Look at score distribution - are scores suspiciously low?
-   • See which features the recommender prioritized
-   • Identify if any songs 'tricked' the system with high scores
+pytest -v
 ```
 
+---
+
+## Limitations
+
+### System Limitations
+
+1. **Small Catalog**: Only 18 songs, limited genre/mood diversity
+2. **No Cultural Context**: Doesn't understand lyrics, language, or cultural significance
+3. **Binary Categorical Matching**: Genre/mood are exact matches only
+4. **API Dependency**: Relies on Gemma 3 27b API availability and cost
+5. **No User Learning**: Doesn't learn from user feedback over time
+6. **Limited Query Understanding**: May misinterpret complex or metaphorical queries
+
+### Potential Biases
+
+1. **Genre Bias**: Some genres have more songs than others
+2. **Mood Bias**: Certain moods are overrepresented
+3. **Energy Bias**: Gaussian function may favor mid-range energy
+4. **Cultural Bias**: Songs reflect Western music traditions
+5. **Language Bias**: Only processes English queries
+
+### Ethical Considerations
+
+**Misuse Prevention:**
+- Content filtering for inappropriate queries
+- Rate limiting to prevent API abuse
+- Input validation and sanitization
+- No user data collection or storage
+- Transparency in how recommendations are made
+
+**Limitations Awareness:**
+- System is for educational purposes only
+- Not suitable for production use
+- Recommendations may not reflect diverse cultural perspectives
+- No personalization or learning capabilities
+
+---
+
+## Reflection on AI Collaboration
+
+Working with AI on this project showed that it was most useful as a guide rather than a replacement for the core system: the strongest suggestions were a hybrid retrieval strategy, confidence scoring, multi-turn conversation for ambiguous queries, and choosing Gemma 3 27b for a practical balance of cost and reasoning, while several ideas were too complex for the project’s small scope, such as full semantic search with embeddings, real-time learning, testing multiple LLMs, and a Redis-based cache. The main lesson was that AI output still needs careful evaluation, because the best solution is usually the one that balances sophistication with simplicity, keeps the recommender logic intact, and improves transparency and error handling so users can trust the results.
+
+---
+
+## Testing Summary
+
+### What Worked
+
+1. **Unit Tests**: All unit tests pass, validating individual components
+2. **Integration Tests**: End-to-end workflow functions correctly
+3. **Preference Extraction**: Gemma 3 27b accurately extracts preferences from natural language
+4. **Hybrid Retrieval**: Combining keyword and preference-based retrieval improves results
+5. **Error Handling**: System handles errors gracefully with helpful messages
+6. **Logging**: Comprehensive logging aids debugging and monitoring
+
+### What Didn't Work
+
+1. **Complex Queries**: Some complex or metaphorical queries are misinterpreted
+2. **Ambiguous Queries**: While the system requests clarification, some users may find this frustrating
+3. **Edge Cases**: Impossible combinations (e.g., high-energy acoustic) are caught but require user correction
+4. **API Rate Limits**: Without proper caching, API calls could hit rate limits
+
+### Lessons Learned
+
+1. **Start simple**: The hybrid retrieval approach worked better than complex semantic search
+2. **Test early and often**: Unit tests caught many issues before integration
+3. **Log everything**: Comprehensive logging made debugging much easier
+4. **User feedback is valuable**: The conversation loop allows users to refine queries naturally
+5. **Guardrails are essential**: Validation and error handling prevent system crashes

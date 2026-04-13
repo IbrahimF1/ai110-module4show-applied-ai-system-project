@@ -244,11 +244,15 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
         List of tuples (song_dict, score, explanation) for top k songs
     """
     # Create UserProfile from dictionary
+    # Use default values if None is provided
+    target_energy_val = user_prefs.get('target_energy')
+    likes_acoustic_val = user_prefs.get('likes_acoustic')
+    
     user = UserProfile(
-        favorite_genre=user_prefs.get('favorite_genre', 'pop'),
-        favorite_mood=user_prefs.get('favorite_mood', 'happy'),
-        target_energy=user_prefs.get('target_energy', 0.7),
-        likes_acoustic=user_prefs.get('likes_acoustic', False),
+        favorite_genre=user_prefs.get('favorite_genre') or 'pop',
+        favorite_mood=user_prefs.get('favorite_mood') or 'happy',
+        target_energy=0.7 if target_energy_val is None else float(target_energy_val),
+        likes_acoustic=False if likes_acoustic_val is None else bool(likes_acoustic_val),
     )
     
     # Create Song objects from dictionaries
